@@ -77,3 +77,37 @@ describe("QtQuick.Layouts.ColumnLayout", function() {
     expect(qml.children[4].x).toBe(105);
   });
 });
+
+describe("QtQuick.Layouts.GridLayout.rectangular", function() {
+  setupDivElement();
+  var load = prefixedQmlLoader("QtQuick.Layouts/qml/GridLayout");
+
+  it("accounts for every row's width, not just the first `columns` rows",
+    function() {
+      // 5 non-square items over 2 columns means 3 rows; the widest row
+      // (a lone 300-wide item) is the row index >= columns, which used to
+      // get skipped when computing contentWidth.
+      var qml = load("ContentSize", this.div);
+      expect(qml.implicitWidth).toBe(305);
+      expect(qml.implicitHeight).toBe(70);
+    }
+  );
+
+  it("divides a spanned item's preferred size by the correct span axis",
+    function() {
+      var qml = load("SpanSize", this.div);
+      expect(qml.implicitWidth).toBe(155);
+      expect(qml.implicitHeight).toBe(205);
+      expect(qml.children[0].x).toBe(0);
+      expect(qml.children[0].y).toBe(0);
+      expect(qml.children[0].width).toBe(100);
+      expect(qml.children[0].height).toBe(200);
+      // Siblings in the rows spanned by children[0] should be centered
+      // against the full (tall) row height, not a half-height row.
+      expect(qml.children[1].x).toBe(105);
+      expect(qml.children[1].y).toBe(25);
+      expect(qml.children[2].x).toBe(105);
+      expect(qml.children[2].y).toBe(130);
+    }
+  );
+});

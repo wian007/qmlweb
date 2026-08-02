@@ -146,8 +146,8 @@ class QtQuick_Layouts_GridLayout extends QtQuick_Layouts_Positioner {
                           this.$inferCellMargin(cell.occupant, "right");
           const height = this.$inferCellSize(cell.occupant, "Height");
           const width = this.$inferCellSize(cell.occupant, "Width");
-          const vSpan = Math.max(cell.occupant.$Layout.columnSpan, 1);
-          const hSpan = Math.max(cell.occupant.$Layout.rowSpan, 1);
+          const hSpan = Math.max(cell.occupant.$Layout.columnSpan, 1);
+          const vSpan = Math.max(cell.occupant.$Layout.rowSpan, 1);
 
           cell.width = (width + hMargin) / hSpan;
           cell.height = (height + vMargin) / vSpan;
@@ -157,17 +157,17 @@ class QtQuick_Layouts_GridLayout extends QtQuick_Layouts_Positioner {
   }
 
   $setContentSize(layout) {
-    for (let x = 0; x < layout.columns; ++x) {
+    for (let y = 0; y < layout.rows; ++y) {
       layout.contentWidth = Math.max(
         layout.contentWidth,
-        this.$getRowWidth(layout, x)
+        this.$getRowWidth(layout, y)
       );
     }
     layout.contentWidth += this.columnSpacing * (layout.columns - 1);
-    for (let y = 0; y < layout.rows; ++y) {
+    for (let x = 0; x < layout.columns; ++x) {
       layout.contentHeight = Math.max(
         layout.contentHeight,
-        this.$getColumnHeight(layout, y)
+        this.$getColumnHeight(layout, x)
       );
     }
     layout.contentHeight += this.rowSpacing * (layout.rows - 1);
@@ -339,7 +339,7 @@ class QtQuick_Layouts_GridLayout extends QtQuick_Layouts_Positioner {
       }
     }
     // Have spanned cell absorb their neighbors
-    const attr = direction === "Width" ? "column" : "rows";
+    const attr = direction === "Width" ? "column" : "row";
     for (let y = 0; y < layout.rows; ++y) {
       for (let x = 0; x < layout.columns; ++x) {
         const cell = this.$getCellDescriptor(layout, x, y);
@@ -406,7 +406,7 @@ class QtQuick_Layouts_GridLayout extends QtQuick_Layouts_Positioner {
       cell.itemX = cell.x + lMargin;
     } else if (alignment & QmlWeb.Qt.AlignRight) {
       cell.itemX = cell.x + outerWidth - cell.itemWidth - rMargin;
-    } else { // AlignVCenter
+    } else { // AlignHCenter
       const innerWidth = outerWidth - lMargin - rMargin;
       cell.itemX = cell.x + innerWidth / 2 - cell.itemWidth / 2;
     }
@@ -415,7 +415,7 @@ class QtQuick_Layouts_GridLayout extends QtQuick_Layouts_Positioner {
       cell.itemY = cell.y + tMargin;
     } else if (alignment & QmlWeb.Qt.AlignBottom) {
       cell.itemY = cell.y + outerHeight - cell.itemHeight - bMargin;
-    } else { // AlignHCenter
+    } else { // AlignVCenter
       const innerHeight = outerHeight - tMargin - bMargin;
       cell.itemY = cell.y + innerHeight / 2 - cell.itemHeight / 2;
     }
