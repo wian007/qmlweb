@@ -47,11 +47,9 @@ class QtQuick_TextEdit extends QtQuick_Item {
   constructor(meta) {
     super(meta);
 
-    // Undo / Redo stacks;
-    this.undoStack = [];
-    this.undoStackPosition = -1;
-    this.redoStack = [];
-    this.redoStackPosition = -1;
+    // Undo / Redo stacks; each entry is a previous value of `text`.
+    this.$undoStack = [];
+    this.$redoStack = [];
 
     const textarea = this.impl = document.createElement("textarea");
     textarea.style.pointerEvents = "auto";
@@ -74,71 +72,104 @@ class QtQuick_TextEdit extends QtQuick_Item {
     this.colorChanged.connect(this, this.$onColorChanged);
 
     this.impl.addEventListener("input", () => this.$updateValue());
+    this.impl.addEventListener("select", () => this.$updateSelection());
+    this.impl.addEventListener("click", () => this.$updateSelection());
+    this.impl.addEventListener("keyup", () => this.$updateSelection());
   }
   append(text) {
     this.text += text;
   }
   copy() {
-    // TODO
+    this.impl.focus();
+    this.impl.setSelectionRange(this.selectionStart, this.selectionEnd);
+    document.execCommand("copy");
   }
   cut() {
-    this.text = this.text(0, this.selectionStart) +
-                this.text(this.selectionEnd, this.text.length);
-    // TODO
+    const start = this.selectionStart;
+    const end = this.selectionEnd;
+    this.impl.focus();
+    this.impl.setSelectionRange(start, end);
+    // Copying to the system clipboard is best-effort: some environments
+    // (headless browsers, missing user activation) silently ignore it.
+    // The text removal below doesn't depend on it succeeding.
+    document.execCommand("copy");
+    this.$replaceText(this.text.slice(0, start) + this.text.slice(end));
+    this.impl.setSelectionRange(start, start);
+    this.$updateSelection();
   }
   deselect() {
-    //this.selectionStart = -1;
-    //this.selectionEnd = -1;
-    //this.selectedText = null;
-    // TODO
+    const pos = this.impl.selectionStart;
+    this.impl.setSelectionRange(pos, pos);
+    this.$updateSelection();
   }
   getFormattedText(start, end) {
-    const text = this.text.slice(start, end);
-    // TODO
-    // process text
-    return text;
+    // Rich text rendering isn't implemented, so formatted and plain text
+    // are the same here.
+    return this.text.slice(start, end);
   }
   getText(start, end) {
     return this.text.slice(start, end);
   }
-  insert(/*position, text*/) {
-    // TODO
+  insert(position, text) {
+    this.$replaceText(
+      this.text.slice(0, position) + text + this.text.slice(position)
+    );
   }
   isRightToLeft(/*start, end*/) {
     // TODO
   }
   linkAt(/*x, y*/) {
-    // TODO
+    // TODO: requires rich text rendering, which isn't implemented
   }
   moveCursorSelection(/*x, y*/) {
-    // TODO
+    // TODO: requires mapping pixel coordinates to a text offset, which
+    // <textarea> has no native API for
   }
   paste() {
-    // TODO
+    // Reading the clipboard requires the async, permission-gated
+    // Clipboard API; not implemented.
   }
   positionAt(/*x, y*/) {
-    // TODO
+    // TODO: requires mapping pixel coordinates to a text offset, which
+    // <textarea> has no native API for
   }
   positionToRectangle(/*position*/) {
     // TODO
   }
   redo() {
-    // TODO
+    if (!this.$redoStack.length) return;
+    this.$undoStack.push(this.text);
+    this.text = this.$redoStack.pop();
+    this.canRedo = this.$redoStack.length > 0;
+    this.canUndo = true;
   }
-  remove(/*start, end*/) {
-    // TODO
+  remove(start, end) {
+    this.$replaceText(this.text.slice(0, start) + this.text.slice(end));
   }
-  select(/*start, end*/) {
-    // TODO
+  select(start, end) {
+    this.impl.setSelectionRange(start, end);
+    this.$updateSelection();
   }
   selectAll() {
-    // TODO
+    this.impl.select();
+    this.$updateSelection();
   }
   selectWord() {
-    // TODO
+    const pos = this.impl.selectionStart;
+    const text = this.text;
+    const isWordChar = c => /\w/.test(c);
+    let start = pos;
+    while (start > 0 && isWordChar(text[start - 1])) start--;
+    let end = pos;
+    while (end < text.length && isWordChar(text[end])) end++;
+    this.select(start, end);
   }
   undo() {
-    // TODO
+    if (!this.$undoStack.length) return;
+    this.$redoStack.push(this.text);
+    this.text = this.$undoStack.pop();
+    this.canUndo = this.$undoStack.length > 0;
+    this.canRedo = true;
   }
   Component$onCompleted() {
     this.selectByKeyboard = !this.readOnly;
@@ -155,11 +186,32 @@ class QtQuick_TextEdit extends QtQuick_Item {
   }
   $updateValue() {
     if (this.text !== this.impl.value) {
+      this.$pushUndoState();
       this.text = this.impl.value;
     }
     this.length = this.text.length;
     this.lineCount = this.$getLineCount();
     this.$updateCss();
+    this.$updateSelection();
+  }
+  $updateSelection() {
+    this.selectionStart = this.impl.selectionStart;
+    this.selectionEnd = this.impl.selectionEnd;
+    this.selectedText = this.text.slice(
+      this.impl.selectionStart, this.impl.selectionEnd
+    );
+    this.cursorPosition = this.impl.selectionEnd;
+  }
+  $pushUndoState() {
+    this.$undoStack.push(this.text);
+    this.$redoStack.length = 0;
+    this.canUndo = true;
+    this.canRedo = false;
+  }
+  $replaceText(newText) {
+    if (newText === this.text) return;
+    this.$pushUndoState();
+    this.text = newText;
   }
   // Transfer dom style to firstChild,
   // then clear corresponding dom style
