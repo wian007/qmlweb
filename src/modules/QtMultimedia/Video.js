@@ -10,8 +10,8 @@ class QtMultimedia_Video extends QtQuick_Item {
 
       StoppedState: 0, PlayingState: 1, PausedState: 2,
 
-      NoMedia: 0, Loading: 1, Loaded: 2, Buffering: 4, Stalled: 8,
-      EndOfMedia: 16, InvalidMedia: 32, UnknownStatus: 64
+      NoMedia: 0, Loading: 1, Loaded: 2, Buffering: 4, Buffered: 128,
+      Stalled: 8, EndOfMedia: 16, InvalidMedia: 32, UnknownStatus: 64
     },
     VideoOutput: { PreserveAspectFit: 0, PreserveAspectCrop: 1, Stretch: 2 }
   };
@@ -54,7 +54,7 @@ class QtMultimedia_Video extends QtQuick_Item {
     this.dom.appendChild(this.impl);
 
     this.volume = this.impl.volume;
-    this.duration = this.impl.duration;
+    this.duration = this.impl.duration * 1000;
 
     this.impl.addEventListener("play", () => {
       this.playing();
@@ -79,8 +79,8 @@ class QtMultimedia_Video extends QtQuick_Item {
 
     this.impl.addEventListener("progress", () => {
       if (this.impl.buffered.length > 0) {
-        this.progress = this.impl.buffered.end(0) / this.impl.duration;
-        this.status = this.progress < 1 ?
+        this.bufferProgress = this.impl.buffered.end(0) / this.impl.duration;
+        this.status = this.bufferProgress < 1 ?
           this.MediaPlayer.Buffering :
           this.MediaPlayer.Buffered;
       }
@@ -98,11 +98,11 @@ class QtMultimedia_Video extends QtQuick_Item {
       this.status = this.MediaPlayer.Loading;
     });
 
-    this.impl.addEventListener("durationchanged", () => {
-      this.duration = this.impl.duration;
+    this.impl.addEventListener("durationchange", () => {
+      this.duration = this.impl.duration * 1000;
     });
 
-    this.impl.addEventListener("volumechanged", () => {
+    this.impl.addEventListener("volumechange", () => {
       this.$runningEventListener++;
       this.volume = this.impl.volume;
       this.$runningEventListener--;
@@ -156,7 +156,7 @@ class QtMultimedia_Video extends QtQuick_Item {
   }
   $onMutedChanged(newValue) {
     if (newValue) {
-      this.$volulmeBackup = this.impl.volume;
+      this.$volumeBackup = this.impl.volume;
       this.volume = 0;
     } else {
       this.volume = this.$volumeBackup;
@@ -182,9 +182,11 @@ class QtMultimedia_Video extends QtQuick_Item {
     this.impl.play();
   }
   seek(offset) {
-    this.impl.currentTime = offset * 1000;
+    this.impl.currentTime = offset / 1000;
   }
   stop() {
+    this.impl.pause();
+    this.impl.currentTime = 0;
   }
   mimetypeFromExtension(extension) {
     const mimetypes = {
