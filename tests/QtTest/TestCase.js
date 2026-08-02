@@ -49,6 +49,12 @@ describe("QtTest", function() {
     expect(function() {
       qml.verify(false, "False");
     }).toThrowError();
+    expect(function() {
+      qml.fuzzyCompare(1.001, 1, 0.01, "FuzzyCompare");
+    }).not.toThrow();
+    expect(function() {
+      qml.fuzzyCompare(1.1, 1, 0.01, "FuzzyCompare");
+    }).toThrowError("FuzzyCompare");
   });
 });
 

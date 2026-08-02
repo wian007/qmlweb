@@ -171,6 +171,14 @@ class QtTest_TestCase extends QtQuick_Item {
     err.skip = true;
     throw err;
   }
+  fuzzyCompare(actual, expected, delta, message = "") {
+    if (Math.abs(actual - expected) > Math.abs(delta)) {
+      const err = new Error(message);
+      err.actual = actual;
+      err.expected = expected;
+      throw err;
+    }
+  }
   /*
   expectFail(tag, message) {
     // TODO
