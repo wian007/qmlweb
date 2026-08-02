@@ -179,7 +179,11 @@ class QtMultimedia_Video extends QtQuick_Item {
     this.impl.pause();
   }
   play() {
-    this.impl.play();
+    // play() returns a promise that rejects when the browser blocks
+    // autoplay; Qt's play() is fire-and-forget, so swallow that here
+    // instead of leaving an unhandled rejection.
+    const playPromise = this.impl.play();
+    if (playPromise) playPromise.catch(() => {});
   }
   seek(offset) {
     this.impl.currentTime = offset / 1000;
