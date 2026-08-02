@@ -94,10 +94,10 @@ class QtQuick_Item extends QtQml_QtObject {
     // childrenRect property
     this.childrenRect = new QmlWeb.QObject(this);
     QmlWeb.createProperties(this.childrenRect, {
-      x: "real", // TODO ro
-      y: "real", // TODO ro
-      width: "real", // TODO ro
-      height: "real" // TODO ro
+      x: { type: "real", readOnly: true },
+      y: { type: "real", readOnly: true },
+      width: { type: "real", readOnly: true },
+      height: { type: "real", readOnly: true }
     });
 
     this.rotationChanged.connect(this, this.$updateTransform);
@@ -143,17 +143,11 @@ class QtQuick_Item extends QtQml_QtObject {
     }
   }
   $onStateChanged(newVal, oldVal) {
-    // let oldState; // TODO: do we need oldState?
     let newState;
     for (let i = 0; i < this.states.length; i++) {
       if (this.states[i].name === newVal) {
         newState = this.states[i];
       }
-      /*
-      else if (this.states[i].name === oldVal) {
-        oldState = this.states[i];
-      }
-      */
     }
 
     const actions = this.$revertActions.slice();
@@ -362,12 +356,6 @@ class QtQuick_Item extends QtQml_QtObject {
     this.$calculateOpacity();
   }
   $calculateOpacity() {
-    // TODO: reset all opacity on layer.enabled changed
-    /*
-    if (false) { // TODO: check layer.enabled
-      this.css.opacity = this.opacity;
-    }
-    */
     const parentOpacity = this.$parent && this.$parent.$opacity || 1;
     this.$opacity = this.opacity * parentOpacity;
     if (this.impl) {
@@ -413,8 +401,6 @@ class QtQuick_Item extends QtQml_QtObject {
     if (propName === "width") {
       this.$isUsingImplicitWidth = false;
     }
-
-    // Position TODO: Layouts
 
     const u = {}; // our update object
 
@@ -508,12 +494,10 @@ class QtQuick_Item extends QtQml_QtObject {
     const h = this.height;
     const top = this.parent ? this.parent.top : 0;
 
-    // HeighttopProp
+    // Height
     if (propName === "height") {
       this.$isUsingImplicitHeight = false;
     }
-
-    // Position TODO: Layouts
 
     const u = {}; // our update object
 
@@ -598,22 +582,25 @@ class QtQuick_Item extends QtQml_QtObject {
     }
     const children = component.children;
 
-    let maxWidth = 0;
-    let maxHeight = 0;
-    let minX = children.length > 0 ? children[0].x : 0;
-    let minY = children.length > 0 ? children[0].y : 0;
+    let left = children[0].x;
+    let top = children[0].y;
+    let right = children[0].x + children[0].width;
+    let bottom = children[0].y + children[0].height;
 
-    for (let i = 0; i < children.length; i++) {
+    for (let i = 1; i < children.length; i++) {
       const child = children[i];
-      maxWidth = Math.max(maxWidth, child.x + child.width);
-      maxHeight = Math.max(maxHeight, child.y + child.heighth);
-      minX = Math.min(minX, child.x);
-      minY = Math.min(minX, child.y);
+      left = Math.min(left, child.x);
+      top = Math.min(top, child.y);
+      right = Math.max(right, child.x + child.width);
+      bottom = Math.max(bottom, child.y + child.height);
     }
 
-    component.childrenRect.x = minX;
-    component.childrenRect.y = minY;
-    component.childrenRect.width = maxWidth;
-    component.childrenRect.height = maxHeight;
+    const rect = component.childrenRect;
+    rect.$canEditReadOnlyProperties = true;
+    rect.x = left;
+    rect.y = top;
+    rect.width = right - left;
+    rect.height = bottom - top;
+    rect.$canEditReadOnlyProperties = false;
   }
 }

@@ -16,4 +16,22 @@ describe("QtQuick.Item", function() {
     expect(div.clientWidth).toBe(200);
     expect(div.clientHeight).toBe(100);
   });
+  it("childrenRect", function() {
+    var qml = loadQml(
+      "import QtQuick 2.0\n" +
+      "Item {\n" +
+      "  width: 300; height: 300\n" +
+      "  Rectangle { x: 10; y: 20; width: 30; height: 40 }\n" +
+      "  Rectangle { x: 100; y: 5; width: 50; height: 60 }\n" +
+      "}\n",
+      this.div
+    );
+    expect(qml.childrenRect.x).toBe(10);
+    expect(qml.childrenRect.y).toBe(5);
+    expect(qml.childrenRect.width).toBe(140);
+    expect(qml.childrenRect.height).toBe(60);
+    expect(function() {
+      qml.childrenRect.x = 0;
+    }).toThrowError(/read only/);
+  });
 });
