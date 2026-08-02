@@ -7,17 +7,28 @@ class QtQuick_Item extends QtQml_QtObject {
     state: "string",
     states: "list",
     transitions: "list",
-    data: "list",
     children: "list",
     resources: "list",
     transform: "list",
     x: "real",
     y: "real",
     z: "real",
-    width: "real",
-    height: "real",
-    implicitWidth: "real",
-    implicitHeight: "real",
+    width: {
+      type: "real", initialValue: null,
+      get: QtQuick_Item.prototype.$getWidth
+    },
+    height: {
+      type: "real", initialValue: null,
+      get: QtQuick_Item.prototype.$getHeight
+    },
+    implicitWidth: {
+      type: "real",
+      set: QtQuick_Item.prototype.$setImplicitWidth
+    },
+    implicitHeight: {
+      type: "real",
+      set: QtQuick_Item.prototype.$setImplicitHeight
+    },
     left: "real",
     right: "real",
     top: "real",
@@ -31,7 +42,6 @@ class QtQuick_Item extends QtQml_QtObject {
     clip: "bool",
     focus: "bool"
   };
-  static defaultProperty = "data";
 
   constructor(meta) {
     super(meta);
@@ -75,44 +85,11 @@ class QtQuick_Item extends QtQml_QtObject {
 
     this.widthChanged.connect(this, this.$updateHGeometry);
     this.heightChanged.connect(this, this.$updateVGeometry);
-    this.implicitWidthChanged.connect(this, this.$onImplicitWidthChanged);
-    this.implicitHeightChanged.connect(this, this.$onImplicitHeightChanged);
 
     this.$isUsingImplicitWidth = true;
     this.$isUsingImplicitHeight = true;
 
-    this.anchors = new QmlWeb.QObject(this);
-    QmlWeb.createProperties(this.anchors, {
-      left: "var",
-      right: "var",
-      top: "var",
-      bottom: "var",
-      horizontalCenter: "var",
-      verticalCenter: "var",
-      fill: "Item",
-      centerIn: "Item",
-      margins: "real",
-      leftMargin: "real",
-      rightMargin: "real",
-      topMargin: "real",
-      bottomMargin: "real"
-    });
-    this.anchors.leftChanged.connect(this, this.$updateHGeometry);
-    this.anchors.rightChanged.connect(this, this.$updateHGeometry);
-    this.anchors.topChanged.connect(this, this.$updateVGeometry);
-    this.anchors.bottomChanged.connect(this, this.$updateVGeometry);
-    this.anchors.horizontalCenterChanged.connect(this, this.$updateHGeometry);
-    this.anchors.verticalCenterChanged.connect(this, this.$updateVGeometry);
-    this.anchors.fillChanged.connect(this, this.$updateHGeometry);
-    this.anchors.fillChanged.connect(this, this.$updateVGeometry);
-    this.anchors.centerInChanged.connect(this, this.$updateHGeometry);
-    this.anchors.centerInChanged.connect(this, this.$updateVGeometry);
-    this.anchors.leftMarginChanged.connect(this, this.$updateHGeometry);
-    this.anchors.rightMarginChanged.connect(this, this.$updateHGeometry);
-    this.anchors.topMarginChanged.connect(this, this.$updateVGeometry);
-    this.anchors.bottomMarginChanged.connect(this, this.$updateVGeometry);
-    this.anchors.marginsChanged.connect(this, this.$updateHGeometry);
-    this.anchors.marginsChanged.connect(this, this.$updateVGeometry);
+    this.anchors = new QmlWeb.QMLAnchors(this);
 
     // childrenRect property
     this.childrenRect = new QmlWeb.QObject(this);
@@ -397,16 +374,26 @@ class QtQuick_Item extends QtQml_QtObject {
       this.impl.style.opacity = this.$opacity;
     }
   }
-  $onImplicitWidthChanged() {
-    if (this.$isUsingImplicitWidth) {
-      this.width = this.implicitWidth;
-      this.$isUsingImplicitWidth = true;
+  $getWidth() {
+    return this.$properties.width.get() || this.implicitWidth;
+  }
+  $getHeight() {
+    return this.$properties.height.get() || this.implicitHeight;
+  }
+  $setImplicitWidth(newVal) {
+    if (newVal !== this.$properties.implicitWidth.get()) {
+      this.$properties.implicitWidth.set(newVal);
+      if (this.$isUsingImplicitWidth) {
+        this.widthChanged();
+      }
     }
   }
-  $onImplicitHeightChanged() {
-    if (this.$isUsingImplicitHeight) {
-      this.height = this.implicitHeight;
-      this.$isUsingImplicitHeight = true;
+  $setImplicitHeight(newVal) {
+    if (newVal !== this.$properties.implicitHeight.get()) {
+      this.$properties.implicitHeight.set(newVal);
+      if (this.$isUsingImplicitHeight) {
+        this.heightChanged();
+      }
     }
   }
   $updateHGeometry(newVal, oldVal, propName) {

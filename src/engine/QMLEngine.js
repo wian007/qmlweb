@@ -458,16 +458,24 @@ class QMLEngine {
   //---------- Private Methods ----------
 
   $initKeyboard() {
-    document.onkeypress = e => {
+    document.onkeydown = e => {
       let focusedElement = this.focusedElement();
       const event = QmlWeb.eventToKeyboard(e || window.event);
       const eventName = QmlWeb.keyboardSignals[event.key];
 
+      if (this.rootObject.$shortcuts) {
+        for (const shortcut of this.rootObject.$shortcuts) {
+          shortcut.Keys.$onPress(event);
+          if (event.accepted) {
+            break;
+          }
+        }
+      }
       while (focusedElement && !event.accepted) {
         const backup = focusedElement.$context.event;
         focusedElement.$context.event = event;
-        focusedElement.Keys.pressed(event);
-        if (eventName) {
+        focusedElement.Keys.$onPress(event);
+        if (eventName && focusedElement.Keys[eventName]) {
           focusedElement.Keys[eventName](event);
         }
         focusedElement.$context.event = backup;
@@ -643,21 +651,31 @@ class QMLEngine {
 
   // This parses the full URL into scheme, authority and path
   $parseURI(uri) {
-    const match = uri.match(/^([^/]*?:\/\/)(.*?)(\/.*)$/);
-    if (match) {
-      return {
-        scheme: match[1],
-        authority: match[2],
-        path: match[3]
-      };
+    if (!uri.match(/^qrc:\//i)) {
+      const match = uri.match(/^([^/]*?:\/\/)(.*?)(\/.*)$/);
+      if (match) {
+        return {
+          scheme: match[1],
+          authority: match[2],
+          path: QmlWeb.helpers.reduceUri(match[3])
+        };
+      }
+    } else {
+      const match = uri.match(/^([^/]*?:\/\/?)(.*?)$/);
+      if (match) {
+        return {
+          scheme: "qrc://",
+          authority: "",
+          path: QmlWeb.helpers.reduceUri(match[2])
+        };
+      }
     }
     return undefined;
   }
 
   // Return a path to load the file
   $resolvePath(file, basePath = this.$basePath) {
-    // probably, replace :// with :/ ?
-    if (!file || file.indexOf("://") !== -1) {
+    if (!file || file.indexOf(":/") !== -1) {
       return file;
     }
 

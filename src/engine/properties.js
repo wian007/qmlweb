@@ -11,7 +11,12 @@ function createProperty(type, obj, propName, options = {}) {
   obj.$properties[propName] = prop;
   obj.$properties[propName].set(options.initialValue, QMLProperty.ReasonInit);
 
-  const getter = () => obj.$properties[propName].get();
+  let getter;
+  if (options.get) {
+    getter = options.get.bind(obj);
+  } else {
+    getter = () => obj.$properties[propName].get();
+  }
   let setter;
   if (options.readOnly) {
     setter = function(newVal) {
@@ -20,6 +25,8 @@ function createProperty(type, obj, propName, options = {}) {
       }
       obj.$properties[propName].set(newVal, QMLProperty.ReasonUser);
     };
+  } else if (options.set) {
+    setter = options.set.bind(obj);
   } else {
     setter = function(newVal) {
       obj.$properties[propName].set(newVal, QMLProperty.ReasonUser);
@@ -69,17 +76,7 @@ function applyProperties(metaObject, item, objectScopeIn, componentScope) {
 
   const children = metaObject.$children;
   if (children && children.length > 0) {
-    if (item.$defaultProperty) {
-      // TODO: detect based on property type, not children count?
-      const value = children.length === 1 ? children[0] : children;
-      item.$properties[item.$defaultProperty].set(
-        value,
-        QMLProperty.ReasonInit,
-        objectScope, componentScope
-      );
-    } else {
-      throw new Error("Cannot assign to unexistant default property");
-    }
+    applyChildrenProperties(item, children, objectScope, componentScope);
   }
   // We purposefully set the default property AFTER using it, in order to only
   // have it applied for instanciations of this component, but not for its
@@ -130,6 +127,24 @@ function applyProperties(metaObject, item, objectScopeIn, componentScope) {
         `Cannot assign to non-existent property "${i}". Ignoring assignment.`
       );
     }
+  }
+}
+
+function applyChildrenProperties(item, children, objectScope, componentScope) {
+  if (item.constructor === QmlWeb.QtQml_Component) {
+    if (children.length > 1) {
+      throw new Error("Components are only allowed to have a single child");
+    }
+  } else if (item.$defaultProperty) {
+    // TODO: detect based on property type, not children count?
+    const value = children.length === 1 ? children[0] : children;
+    item.$properties[item.$defaultProperty].set(
+      value,
+      QmlWeb.QMLProperty.ReasonInit,
+      objectScope, componentScope
+    );
+  } else {
+    throw new Error("Cannot assign to unexistant default property");
   }
 }
 
