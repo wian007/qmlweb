@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>QML Inline Example</title>
+    <script src="../lib/qmlweb.js"></script>
+  </head>
+  <body>
+    <h1>Rendered into an auto-created wrapper:</h1>
+    <script type="text/qml">
+      import QtQuick 2.0
+
+      Rectangle {
+        width: 200; height: 100
+        color: "lightgray"
+
+        Text {
+          anchors.centerIn: parent
+          text: "Hello from inline QML!"
+        }
+      }
+    </script>
+
+    <h1>Rendered into an existing element:</h1>
+    <div id="target" style="border: 1px dashed #999;"></div>
+    <script type="text/qml" data-qml-target="#target">
+      import QtQuick 2.0
+
+      Rectangle {
+        width: 200; height: 100
+        color: "lightblue"
+      }
+    </script>
+  </body>
+</html>

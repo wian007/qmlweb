@@ -91,6 +91,37 @@ the page is opened. The loaded QML element will fill the whole page.
 </html>
 ```
 
+### Inline QML
+
+You can embed QML directly in the page using a `<script type="text/qml">`
+block — no separate `.qml` file needed. Browsers treat unknown script types
+as inert data, so this is a safe place to put markup.
+
+```html
+<script type="text/qml">
+  import QtQuick 2.0
+
+  Rectangle {
+    width: 200; height: 100
+    color: "lightgray"
+  }
+</script>
+```
+
+By default a wrapper `<div>` is created right before the script tag. To
+render into an existing element instead, point `data-qml-target` at a CSS
+selector:
+
+```html
+<div id="target"></div>
+<script type="text/qml" data-qml-target="#target">
+  import QtQuick 2.0
+  Rectangle { width: 200; height: 100; color: "lightblue" }
+</script>
+```
+
+See [examples/inline.html](examples/inline.html) for a full example.
+
 ### Web Components
 
 You can register QML files as
