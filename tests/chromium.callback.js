@@ -9,17 +9,13 @@ const crypto = require("crypto");
 const path = require("path");
 const puppeteer = require("puppeteer");
 const r2 = require("r2");
-const mkdirp = require("mkdirp");
+const { mkdirp } = require("mkdirp");
 
 const secret = crypto.randomBytes(64).toString("base64");
 const port = 9100;
 
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-function mkdirpAsync(dir) {
-  return new Promise(resolve => mkdirp(dir, resolve));
 }
 
 async function attempt() {
@@ -72,7 +68,7 @@ async function main() {
       const args = { omitBackground: true };
       if (options.fileName && process.env.QMLWEB_SAVE_RENDER) {
         const filepath = `tmp/Render/${options.fileName}`;
-        await mkdirpAsync(path.dirname(filepath));
+        await mkdirp(path.dirname(filepath));
         args.path = filepath;
       }
       if (offset) {
