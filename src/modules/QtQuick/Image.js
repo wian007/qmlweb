@@ -16,7 +16,9 @@ class QtQuick_Image extends QtQuick_Item {
     mirror: "bool",
     progress: "real",
     source: "url",
-    status: { type: "enum", initialValue: 1 } // Image.Null
+    status: { type: "enum", initialValue: 1 }, // Image.Null
+    paintedWidth: { type: "real", readOnly: true },
+    paintedHeight: { type: "real", readOnly: true }
   };
 
   constructor(meta) {
@@ -41,6 +43,7 @@ class QtQuick_Image extends QtQuick_Item {
       this.sourceSize.height = h;
       this.implicitWidth = w;
       this.implicitHeight = h;
+      this.$updatePaintedSize();
       this.progress = 1;
       this.status = this.Image.Ready;
     });
@@ -51,6 +54,9 @@ class QtQuick_Image extends QtQuick_Item {
     this.sourceChanged.connect(this, this.$onSourceChanged);
     this.mirrorChanged.connect(this, this.$onMirrorChanged);
     this.fillModeChanged.connect(this, this.$onFillModeChanged);
+    this.fillModeChanged.connect(this, this.$updatePaintedSize);
+    this.widthChanged.connect(this, this.$updatePaintedSize);
+    this.heightChanged.connect(this, this.$updatePaintedSize);
     this.smoothChanged.connect(this, this.$onSmoothChanged);
   }
   $updateFillMode(val = this.fillMode) {
@@ -128,5 +134,28 @@ class QtQuick_Image extends QtQuick_Item {
       style.imageRendering = "crisp-edges";
       style.imageRendering = "pixelated";
     }
+  }
+  $updatePaintedSize() {
+    const w = this.width;
+    const h = this.height;
+    const sw = this.sourceSize.width;
+    const sh = this.sourceSize.height;
+    let paintedWidth = w;
+    let paintedHeight = h;
+    if (sw > 0 && sh > 0 && w > 0 && h > 0) {
+      if (this.fillMode === this.Image.PreserveAspectFit) {
+        const scale = Math.min(w / sw, h / sh);
+        paintedWidth = sw * scale;
+        paintedHeight = sh * scale;
+      } else if (this.fillMode === this.Image.PreserveAspectCrop) {
+        const scale = Math.max(w / sw, h / sh);
+        paintedWidth = sw * scale;
+        paintedHeight = sh * scale;
+      }
+    }
+    this.$canEditReadOnlyProperties = true;
+    this.paintedWidth = paintedWidth;
+    this.paintedHeight = paintedHeight;
+    this.$canEditReadOnlyProperties = false;
   }
 }

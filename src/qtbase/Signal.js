@@ -78,7 +78,7 @@ class Signal {
         callType === 3 && thisObj === args[0] && slot === args[0][args[1]] ||
         thisObj === args[0] && slot === args[1]
       ) {
-        if (thisObj) {
+        if (thisObj && thisObj.$tidyupList) {
           const index = thisObj.$tidyupList.indexOf(this.signal);
           if (index >= 0) {
             thisObj.$tidyupList.splice(index, 1);
