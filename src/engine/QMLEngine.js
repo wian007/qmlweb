@@ -445,9 +445,24 @@ class QMLEngine {
 
   size() {
     return {
-      width: this.rootObject.getWidth(),
-      height: this.rootObject.getHeight()
+      width: this.rootObject.width,
+      height: this.rootObject.height
     };
+  }
+
+  // Keeps an auto-managed (unstyled) target element sized to match the
+  // root object, since a target with no explicit CSS size otherwise stays
+  // at its default flow-layout height of 0 -- the root Item is
+  // position: absolute, which auto-height calculations ignore.
+  autoSizeTarget() {
+    const root = this.rootObject;
+    const update = () => {
+      this.dom.style.width = `${root.width}px`;
+      this.dom.style.height = `${root.height}px`;
+    };
+    update();
+    root.widthChanged.connect(update);
+    root.heightChanged.connect(update);
   }
 
   focusedElement() {

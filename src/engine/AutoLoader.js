@@ -7,6 +7,7 @@ window.addEventListener("load", () => {
       QmlWeb.qmlEngine = new QmlWeb.QMLEngine();
       QmlWeb.qmlEngine.loadFile(source);
       QmlWeb.qmlEngine.start();
+      QmlWeb.qmlEngine.autoSizeTarget();
       break;
     }
   }
