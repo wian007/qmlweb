@@ -3,6 +3,13 @@ class QtQuick_Rectangle extends QtQuick_Item {
   static properties = {
     color: { type: "color", initialValue: "white" },
     radius: "real",
+    // Fall back to `radius` when left unset. A plain "real" property
+    // defaults to 0, indistinguishable from an explicit 0, so these use
+    // NaN as the "unset" sentinel instead.
+    topLeftRadius: { type: "real", initialValue: NaN },
+    topRightRadius: { type: "real", initialValue: NaN },
+    bottomLeftRadius: { type: "real", initialValue: NaN },
+    bottomRightRadius: { type: "real", initialValue: NaN },
     gradient: "gradient"
   };
 
@@ -27,7 +34,11 @@ class QtQuick_Rectangle extends QtQuick_Item {
     this.dom.appendChild(bg);
 
     this.colorChanged.connect(this, this.$onColorChanged);
-    this.radiusChanged.connect(this, this.$onRadiusChanged);
+    this.radiusChanged.connect(this, this.$updateRadius);
+    this.topLeftRadiusChanged.connect(this, this.$updateRadius);
+    this.topRightRadiusChanged.connect(this, this.$updateRadius);
+    this.bottomLeftRadiusChanged.connect(this, this.$updateRadius);
+    this.bottomRightRadiusChanged.connect(this, this.$updateRadius);
     this.border.colorChanged.connect(this, this.border$onColorChanged);
     this.border.widthChanged.connect(this, this.border$onWidthChanged);
     this.widthChanged.connect(this, this.$updateBorder);
@@ -45,8 +56,16 @@ class QtQuick_Rectangle extends QtQuick_Item {
     this.$borderActive = true;
     this.$updateBorder();
   }
-  $onRadiusChanged(newVal) {
-    this.impl.style.borderRadius = `${newVal}px`;
+  $updateRadius() {
+    const radius = this.radius;
+    function corner(val) {
+      return isNaN(val) ? radius : val;
+    }
+    const style = this.impl.style;
+    style.borderTopLeftRadius = `${corner(this.topLeftRadius)}px`;
+    style.borderTopRightRadius = `${corner(this.topRightRadius)}px`;
+    style.borderBottomLeftRadius = `${corner(this.bottomLeftRadius)}px`;
+    style.borderBottomRightRadius = `${corner(this.bottomRightRadius)}px`;
   }
   $updateBorder() {
     const border = this.$borderActive ? Math.max(0, this.border.width) : 0;
