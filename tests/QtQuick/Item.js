@@ -16,6 +16,15 @@ describe("QtQuick.Item", function() {
     expect(div.clientWidth).toBe(200);
     expect(div.clientHeight).toBe(100);
   });
+  it("enabled defaults to true and is a real bindable property",
+    function() {
+      var qml = loadQml(
+        "import QtQuick 2.0\nItem { enabled: false }\n", this.div
+      );
+      expect(qml.enabled).toBe(false);
+      qml.enabled = true;
+      expect(qml.enabled).toBe(true);
+    });
   it("childrenRect", function() {
     var qml = loadQml(
       "import QtQuick 2.0\n" +

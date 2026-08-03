@@ -2,7 +2,6 @@
 class QtQuick_MouseArea extends QtQuick_Item {
   static properties = {
     acceptedButtons: { type: "variant", initialValue: 1 }, // Qt.LeftButton
-    enabled: { type: "bool", initialValue: true },
     hoverEnabled: "bool",
     mouseX: "real",
     mouseY: "real",

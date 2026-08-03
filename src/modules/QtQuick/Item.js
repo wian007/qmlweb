@@ -4,6 +4,7 @@ class QtQuick_Item extends QtQml_QtObject {
     $opacity: { type: "real", initialValue: 1 },
     parent: "Item",
     antialiasing: "bool",
+    enabled: { type: "bool", initialValue: true },
     state: "string",
     states: "list",
     transitions: "list",
