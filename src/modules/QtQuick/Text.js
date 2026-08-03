@@ -20,7 +20,15 @@ class QtQuick_Text extends QtQuick_Item {
     horizontalAlignment: { type: "enum", initialValue: 1 }, // Text.AlignLeft
     verticalAlignment: { type: "enum", initialValue: 32 }, // Text.AlignTop
     style: "enum",
-    styleColor: "color"
+    styleColor: "color",
+    padding: { type: "real", initialValue: 0 },
+    // Fall back to `padding` when left unset. NaN is used as the
+    // "unset" sentinel since a plain "real" property defaults to 0,
+    // indistinguishable from an explicit 0.
+    topPadding: { type: "real", initialValue: NaN },
+    bottomPadding: { type: "real", initialValue: NaN },
+    leftPadding: { type: "real", initialValue: NaN },
+    rightPadding: { type: "real", initialValue: NaN }
   };
 
   constructor(meta) {
@@ -47,6 +55,11 @@ class QtQuick_Text extends QtQuick_Item {
                                             this.$onVerticalAlignmentChanged);
     this.styleChanged.connect(this, this.$onStyleChanged);
     this.styleColorChanged.connect(this, this.$onStyleColorChanged);
+    this.paddingChanged.connect(this, this.$updatePadding);
+    this.topPaddingChanged.connect(this, this.$updatePadding);
+    this.bottomPaddingChanged.connect(this, this.$updatePadding);
+    this.leftPaddingChanged.connect(this, this.$updatePadding);
+    this.rightPaddingChanged.connect(this, this.$updatePadding);
 
     this.widthChanged.connect(this, this.$onWidthChanged);
     this.fontChanged.connect(this, this.$onFontChanged);
@@ -94,6 +107,18 @@ class QtQuick_Text extends QtQuick_Item {
   }
   $onStyleColorChanged(newVal) {
     this.$updateShadow(this.style, newVal.$css);
+  }
+  $updatePadding() {
+    const padding = this.padding;
+    function side(val) {
+      return isNaN(val) ? padding : val;
+    }
+    const style = this.impl.style;
+    style.paddingTop = `${side(this.topPadding)}px`;
+    style.paddingBottom = `${side(this.bottomPadding)}px`;
+    style.paddingLeft = `${side(this.leftPadding)}px`;
+    style.paddingRight = `${side(this.rightPadding)}px`;
+    this.$updateImplicit();
   }
   $onWrapModeChanged(newVal) {
     const style = this.impl.style;
