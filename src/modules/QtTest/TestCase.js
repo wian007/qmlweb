@@ -179,18 +179,23 @@ class QtTest_TestCase extends QtQuick_Item {
       throw err;
     }
   }
+  findChild(parent, objectName) {
+    if (!parent) return undefined;
+    const kids = parent.children || parent.data || [];
+    for (let i = 0; i < kids.length; i++) {
+      const child = kids[i];
+      if (!child) continue;
+      if (child.objectName === objectName) return child;
+      const found = this.findChild(child, objectName);
+      if (found) return found;
+    }
+    return undefined;
+  }
   /*
   expectFail(tag, message) {
     // TODO
   }
   expectFailContinue(tag, message) {
-    // TODO
-  }
-  findChild(parent, objectName) {
-    // TODO
-    // return QtObject
-  }
-  fuzzyCompare(actual, expected, delta, message) {
     // TODO
   }
   grabImage(item) {

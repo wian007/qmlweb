@@ -22,6 +22,16 @@ describe("QtTest", function() {
     expect(tests.stats.skip).toBe(1);
   });
 
+  it("FindChild", function() {
+    load("FindChild", this.div);
+    var tests = QmlWeb.engine.tests;
+    expect(tests.total).toBe(1);
+    expect(tests.completed).toBe(1);
+    expect(tests.stats.pass).toBe(6);
+    expect(tests.stats.fail).toBe(0);
+    expect(tests.stats.skip).toBe(0);
+  });
+
   it("Datadriven", function() {
     load("Datadriven", this.div);
     var tests = QmlWeb.engine.tests;

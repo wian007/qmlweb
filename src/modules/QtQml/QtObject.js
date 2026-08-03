@@ -3,7 +3,8 @@ class QtQml_QtObject extends QmlWeb.QObject {
   $Signals = {};
 
   static properties = {
-    data: "list"
+    data: "list",
+    objectName: "string"
   };
   static defaultProperty = "data";
 
