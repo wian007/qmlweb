@@ -25,6 +25,23 @@ describe("QtQuick.Item", function() {
       qml.enabled = true;
       expect(qml.enabled).toBe(true);
     });
+  it("smooth defaults to true and toggles image-rendering", function() {
+    var qml = loadQml(
+      "import QtQuick 2.0\nItem { smooth: false }\n", this.div
+    );
+    expect(qml.smooth).toBe(false);
+    expect(qml.dom.style.imageRendering).toBe("pixelated");
+    qml.smooth = true;
+    expect(qml.dom.style.imageRendering).toBe("auto");
+  });
+  it("transformOrigin defaults to Center and maps to CSS transform-origin",
+    function() {
+      var qml = loadQml("import QtQuick 2.0\nItem { }\n", this.div);
+      expect(qml.transformOrigin).toBe(qml.Item.Center);
+      expect(qml.dom.style.transformOrigin).toBe("50% 50%");
+      qml.transformOrigin = qml.Item.TopLeft;
+      expect(qml.dom.style.transformOrigin).toBe("0% 0%");
+    });
   it("childrenRect", function() {
     var qml = loadQml(
       "import QtQuick 2.0\n" +

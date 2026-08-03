@@ -1,10 +1,18 @@
 // eslint-disable-next-line no-undef
 class QtQuick_Item extends QtQml_QtObject {
+  static enums = {
+    Item: {
+      TopLeft: 0, Top: 1, TopRight: 2, Left: 3, Center: 4, Right: 5,
+      BottomLeft: 6, Bottom: 7, BottomRight: 8
+    }
+  };
   static properties = {
     $opacity: { type: "real", initialValue: 1 },
     parent: "Item",
     antialiasing: "bool",
     enabled: { type: "bool", initialValue: true },
+    smooth: { type: "bool", initialValue: true },
+    transformOrigin: { type: "enum", initialValue: 4 }, // Item.Center
     state: "string",
     states: "list",
     transitions: "list",
@@ -104,6 +112,10 @@ class QtQuick_Item extends QtQml_QtObject {
     this.rotationChanged.connect(this, this.$updateTransform);
     this.scaleChanged.connect(this, this.$updateTransform);
     this.transformChanged.connect(this, this.$updateTransform);
+    this.transformOriginChanged.connect(this, this.$updateTransformOrigin);
+    this.$updateTransformOrigin(this.transformOrigin);
+    this.smoothChanged.connect(this, this.$updateSmooth);
+    this.$updateSmooth(this.smooth);
 
     this.Component.completed.connect(this, this.Component$onCompleted_);
     this.opacityChanged.connect(this, this.$calculateOpacity);
@@ -352,6 +364,17 @@ class QtQuick_Item extends QtQml_QtObject {
     this.dom.style.msTransform = transform;     // IE
     this.dom.style.filter = filter;
     this.dom.style.webkitFilter = filter; // Chrome, Safari and Opera
+  }
+  $updateTransformOrigin(newVal) {
+    const origins = [
+      "0% 0%", "50% 0%", "100% 0%",
+      "0% 50%", "50% 50%", "100% 50%",
+      "0% 100%", "50% 100%", "100% 100%"
+    ];
+    this.dom.style.transformOrigin = origins[newVal] || origins[4];
+  }
+  $updateSmooth(newVal) {
+    this.dom.style.imageRendering = newVal ? "auto" : "pixelated";
   }
   Component$onCompleted_() {
     this.$calculateOpacity();
