@@ -110,17 +110,36 @@ function getConstructor(moduleName, version, name) {
   return null;
 }
 
+// Best-effort ranking of a type's `versions` regexp, used to pick the
+// "latest" implementation when a module is imported without a version
+// (Qt 6 style, e.g. `import QtQuick.Controls`) and more than one
+// registered type shares the same name (e.g. QtQuick.Controls 1.x and
+// QtQuick.Controls 2.x both register a Button).
+function versionRank(versions) {
+  const match = versions.source.match(/\d+/);
+  return match ? parseInt(match[0], 10) : -1;
+}
+
 function getModuleConstructors(moduleName, version) {
   const constructors = {};
+  const ranks = {};
   if (typeof modules[moduleName] === "undefined") {
     console.warn(`module "${moduleName}" not found`);
     return constructors;
   }
+  const matchAny = version === undefined;
   for (let i = 0; i < modules[moduleName].length; ++i) {
     const module = modules[moduleName][i];
-    if (module.versions.test(version)) {
-      constructors[module.name] = module.constructor;
+    if (!matchAny && !module.versions.test(version)) continue;
+    if (matchAny) {
+      const rank = versionRank(module.versions);
+      if (constructors.hasOwnProperty(module.name) &&
+          ranks[module.name] >= rank) {
+        continue;
+      }
+      ranks[module.name] = rank;
     }
+    constructors[module.name] = module.constructor;
   }
   return constructors;
 }
@@ -174,13 +193,17 @@ function loadImports(self, imports) {
     imports.push(["qmlimport", "QtQml", 2, "", true]);
   }
   for (let i = 0; i < imports.length; ++i) {
-    const [, moduleName, moduleVersion, moduleAlias] = imports[i];
+    const [, moduleName, moduleVersion, moduleAlias, isQualifiedName] =
+      imports[i];
     let addedConstructors;
     if (typeof moduleVersion === "number") {
       const versionString = moduleVersion % 1 === 0 ?
                               moduleVersion.toFixed(1) :
                               moduleVersion.toString();
       addedConstructors = getModuleConstructors(moduleName, versionString);
+    } else if (isQualifiedName) {
+      // Qt 6 style: `import QtQuick` with no version means "latest".
+      addedConstructors = getModuleConstructors(moduleName, undefined);
     } else {
       addedConstructors = getDirectoryConstructors(moduleName, self);
     }
