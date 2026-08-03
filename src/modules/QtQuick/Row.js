@@ -11,7 +11,8 @@ class QtQuick_Row extends QtQuick_Positioner {
     this.layoutChildren();
   }
   layoutChildren() {
-    let curPos = this.padding;
+    const top = this.$paddingTop();
+    let curPos = this.$paddingLeft();
     let maxHeight = 0;
     // When layoutDirection is RightToLeft we need oposite order
     let i = this.layoutDirection === 1 ? this.children.length - 1 : 0;
@@ -25,12 +26,12 @@ class QtQuick_Row extends QtQuick_Positioner {
       maxHeight = child.height > maxHeight ? child.height : maxHeight;
 
       child.x = curPos;
-      if (this.padding > 0) child.y = this.padding;
+      child.y = top;
 
       curPos += child.width + this.spacing;
     }
-    this.implicitHeight = maxHeight + this.padding * 2;
+    this.implicitHeight = maxHeight + top + this.$paddingBottom();
     // We want no spacing at the right side
-    this.implicitWidth = curPos - this.spacing + this.padding;
+    this.implicitWidth = curPos - this.spacing + this.$paddingRight();
   }
 }

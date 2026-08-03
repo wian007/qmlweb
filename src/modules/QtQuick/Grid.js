@@ -34,8 +34,10 @@ class QtQuick_Grid extends QtQuick_Positioner {
     const step = this.layoutDirection === 1 ? -1 : 1;
     const startingPoint = this.layoutDirection === 1 ? c - 1 : 0;
     const endPoint = this.layoutDirection === 1 ? -1 : c;
-    let curHPos = 0;
-    let curVPos = 0;
+    const top = this.$paddingTop();
+    const left = this.$paddingLeft();
+    let curHPos = left;
+    let curVPos = top;
     if (this.flow === 0) {
       for (let i = 0; i < r; i++) {
         for (let j = startingPoint; j !== endPoint; j += step) {
@@ -49,7 +51,7 @@ class QtQuick_Grid extends QtQuick_Positioner {
           curHPos += colWidth[j] + this.spacing;
         }
         curVPos += rowHeight[i] + this.spacing;
-        curHPos = 0;
+        curHPos = left;
       }
     } else {
       for (let i = startingPoint; i !== endPoint; i += step) {
@@ -64,7 +66,7 @@ class QtQuick_Grid extends QtQuick_Positioner {
           curVPos += rowHeight[j] + this.spacing;
         }
         curHPos += colWidth[i] + this.spacing;
-        curVPos = 0;
+        curVPos = top;
       }
     }
 
@@ -77,8 +79,8 @@ class QtQuick_Grid extends QtQuick_Positioner {
     for (const i in rowHeight) {
       gridHeight += rowHeight[i] + this.spacing;
     }
-    this.implicitWidth = gridWidth;
-    this.implicitHeight = gridHeight;
+    this.implicitWidth = gridWidth + left + this.$paddingRight();
+    this.implicitHeight = gridHeight + top + this.$paddingBottom();
   }
   $getVisibleItems() {
     return this.children.filter(child =>
